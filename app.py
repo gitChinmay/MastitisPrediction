@@ -8,7 +8,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from forms import LoginForm, RegisterForm, EditProfileForm
 from datetime import datetime
+
 import json
+import numpy as np
+import pandas as pd
+import pickle
+import sklearn
+
+
+
 import azure.cosmos.cosmos_client as cosmos_client
 import azure.cosmos.errors as errors
 import azure.cosmos.documents as documents
@@ -68,26 +76,6 @@ container_name = 'con_predictions'
 
 database = client.get_database_client(database_name)
 container = database.get_container_client(container_name)
-aid = "'102'"
-# query = "SELECT c.Prediction FROM con_predictions c where c.AnimalID = " + aid
-query = "SELECT * from c"
-print(query)
-database_link = 'dbs/' + database_name
-collection_link = database_link + '/colls/' + container_name
-data_dict = {"id": "3", "AnimalID": "102", "Prediction": "N"}
-data_dict = json.dumps(data_dict)
-# family_items_to_create = ['1', 'A']
-
-# for family_item in family_items_to_create:
-#     container.create_item(body=family_item)
-# insert_data = client.UpsertItem(collection_link,json.loads(data_dict)
-#insert_data = container.upsert_item(json.loads(data_dict))
-
-items = list(container.query_items(query=query, enable_cross_partition_query=True))
-print(items)
-request_charge = container.client_connection.last_response_headers['x-ms-request-charge']
-
-print('Query returned {0} items. Operation consumed {1} request units'.format(len(items), request_charge))
 
 # ------------------- Routes, acting as Controllers -----------------------
 @app.route('/')
@@ -109,6 +97,28 @@ def catalog():
 @app.route("/simulate", methods=['GET', 'POST'])
 def simulate():
     print("In")
+
+    filepath = "test_data.csv"
+    df = pd.read_csv(filepath)
+    ids = np.array(df.AnimalId)
+    remarks = np.array(df.Remark)
+    total_samples = len(ids)
+
+    model_from_file = open('LR.pkl', 'rb')
+    model_from_pickle = pickle.load(model_from_file)
+
+    test_samples = df.drop(['Remark', 'AnimalId'], axis=1)
+    for i in range(total_samples):
+        sample = np.array(test_samples.iloc[i])
+        sample = sample.reshape(1, -1)
+        res = model_from_pickle.predict(sample)
+        #print(i, res[0])
+        sample_dict = {"id": str(i), "AnimalID": str(ids[i]), "Prediction": str(res[0])}
+        sample_dict = json.dumps(sample_dict)
+        #print(sample_dict)
+        insert_data = container.upsert_item(json.loads(sample_dict))
+        #print("inserted")
+
     return redirect(url_for('dashboard'))
 
 @app.route("/prediction/<string:id>", methods=['GET', 'POST'])

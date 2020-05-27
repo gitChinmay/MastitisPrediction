@@ -6,3 +6,8 @@ flask_wtf
 wtforms_components
 azure-cosmos
 email_validator
+numpy
+json
+pandas
+pickle
+sklearn
