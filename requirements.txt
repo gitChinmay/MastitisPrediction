@@ -2,7 +2,7 @@ Flask
 Flask_bootstrap
 flask_sqlalchemy
 flask_login
-flast_wtf
+flask_wtf
 wtforms_components
 azure-cosmos
 email_validator
