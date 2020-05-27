@@ -8,5 +8,4 @@ azure-cosmos
 email_validator
 numpy
 pandas
-pickle
 sklearn
