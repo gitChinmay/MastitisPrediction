@@ -4,3 +4,4 @@ flask_sqlalchemy
 flask_login
 flast_wtf
 wtforms_components
+azure-cosmos
