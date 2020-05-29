@@ -127,10 +127,18 @@ def predict(id):
     id = "'" + id + "'"
     query = "SELECT c.Prediction FROM con_predictions c where c.AnimalID = " + id
     items = list(container.query_items(query=query, enable_cross_partition_query=True))
+    pathogens = {"1": "S. Agalactiae", "4": "S. Dysgalactiae", "5": "E. Coli", "21": "S. Uberis"}
     if len(items) == 0:
         result = "Invalid Cow Id"
     else:
         result = items[0]['Prediction']
+        if result == "0":
+            result = "Healthy"
+        else:
+            if result in pathogens:
+                result = "Affected by Mastitis (Pathogen " + pathogens[result] + ")"
+            else:  
+                result = "Affected by Mastitis (Pathogen " + items[0]['Prediction'] + ")"
         print(result)
     #return redirect(url_for('dashboard'), result)
     return render_template('dashboard_consumer.html', result=result)
